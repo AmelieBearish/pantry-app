@@ -37,7 +37,7 @@ export default function App() {
   const [page, setPage] = useState("pantry");
   const [shoppingList, setShoppingList] = useState([]);
   const [showAddShoppingModal, setShowAddShoppingModal] = useState(false);
-  const [shoppingForm, setShoppingForm] = useState({ name: "", amount: "" });
+  const [shoppingForm, setShoppingForm] = useState({ name: "", amount: "", registerToPantry: false, category: "野菜" });
 
   useEffect(() => {
     const handleResize = () => setIsPC(window.innerWidth >= 768);
@@ -232,8 +232,28 @@ export default function App() {
           updatedAt: new Date().toLocaleDateString("ja-JP"),
           updatedTimestamp: serverTimestamp(),
         });
+      } else if (item.registerToPantry && item.category) {
+        const newRef = doc(collection(db, "users", user.uid, "pantry"));
+        await setDoc(newRef, {
+          name: item.name,
+          category: item.category,
+          status: "在庫あり",
+          memo: "",
+          expiryDate: "",
+          updatedAt: new Date().toLocaleDateString("ja-JP"),
+          updatedTimestamp: serverTimestamp(),
+        });
       }
     }
+  };
+
+  const handleAddToShoppingFromCard = async (item) => {
+    const already = shoppingList.some(s => s.name === item.name);
+    if (already) {
+      window.alert(`「${item.name}」はすでにリストに追加されています`);
+      return;
+    }
+    await addShoppingItem(user.uid, { name: item.name, amount: "", recipeId: null, recipeName: null });
   };
 
   const handleAddShoppingManual = async () => {
@@ -330,6 +350,18 @@ export default function App() {
               <input value={shoppingForm.name} onChange={e => setShoppingForm({ ...shoppingForm, name: e.target.value })} placeholder="例：トイレットペーパー" style={inp} />
               <label style={lbl}>数量（任意）</label>
               <input value={shoppingForm.amount} onChange={e => setShoppingForm({ ...shoppingForm, amount: e.target.value })} placeholder="例：1袋" style={inp} />
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 16, padding: "12px 14px", background: COLORS.bg, borderRadius: 10 }}>
+                <input type="checkbox" id="registerToPantry" checked={shoppingForm.registerToPantry} onChange={e => setShoppingForm({ ...shoppingForm, registerToPantry: e.target.checked })} style={{ width: 18, height: 18, cursor: "pointer", accentColor: COLORS.accent, flexShrink: 0 }} />
+                <label htmlFor="registerToPantry" style={{ fontSize: 13, color: COLORS.text, cursor: "pointer", fontWeight: 600 }}>もぐポケに登録する</label>
+              </div>
+              {shoppingForm.registerToPantry && (
+                <div>
+                  <label style={lbl}>カテゴリ</label>
+                  <select value={shoppingForm.category} onChange={e => setShoppingForm({ ...shoppingForm, category: e.target.value })} style={inp}>
+                    {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+                  </select>
+                </div>
+              )}
               <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
                 <button onClick={() => setShowAddShoppingModal(false)} style={{ flex: 1, padding: 12, border: `1.5px solid ${COLORS.border}`, borderRadius: 12, background: COLORS.white, fontSize: 14, cursor: "pointer", color: COLORS.text }}>キャンセル</button>
                 <button onClick={handleAddShoppingManual} style={{ flex: 2, padding: 12, border: "none", borderRadius: 12, background: COLORS.accent, color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>追加する</button>
@@ -502,6 +534,9 @@ export default function App() {
                     <div style={{ display: "flex", gap: 6 }}>
                       <button onClick={() => openEdit(item)} style={{ background: COLORS.bg, border: "none", borderRadius: 8, padding: "4px 10px", fontSize: 12, cursor: "pointer", color: COLORS.textLight }}>編集</button>
                       <button onClick={() => removeItem(item.id)} style={{ background: "#fde8e8", border: "none", borderRadius: 8, padding: "4px 10px", fontSize: 12, cursor: "pointer", color: "#c0392b" }}>削除</button>
+                      {(item.status === "在庫なし" || item.status === "残り少ない") && (
+                        <button onClick={() => handleAddToShoppingFromCard(item)} style={{ background: "#e8f4fd", border: "none", borderRadius: 8, padding: "4px 10px", fontSize: 12, cursor: "pointer", color: "#2980b9" }}>🛒</button>
+                      )}
                     </div>
                   </div>
                 </div>
