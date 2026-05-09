@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Search, Plus, LogOut } from "lucide-react";
 import { auth, db } from "./firebase";
-import { GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
+import { GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "firebase/auth";
 import { collection, doc, onSnapshot, setDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
 
 const CATEGORIES = ["野菜", "肉・魚", "乳製品・卵", "調味料", "冷凍食品", "その他"];
@@ -41,6 +41,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    getRedirectResult(auth).catch(() => {});
     const unsubscribe = onAuthStateChanged(auth, (u) => {
       setUser(u);
       setAuthLoading(false);
@@ -58,9 +59,9 @@ export default function App() {
     return unsubscribe;
   }, [user]);
 
-  const login = async () => {
+  const login = () => {
     const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
+    signInWithRedirect(auth, provider);
   };
 
   const logout = () => signOut(auth);
