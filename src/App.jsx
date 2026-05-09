@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { Search, Plus, LogOut } from "lucide-react";
-import { auth, db } from "./firebase";
+import { Search, Plus, LogOut, ShoppingCart } from "lucide-react";
+import { auth, db, subscribeShoppingList, addShoppingItem, updateShoppingItemChecked, deleteShoppingItem } from "./firebase";
 import { GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "firebase/auth";
 import { collection, doc, onSnapshot, setDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
 
@@ -31,9 +31,13 @@ export default function App() {
   const [activeTab, setActiveTab] = useState("すべて");
   const [search, setSearch] = useState("");
   const [showMenu, setShowMenu] = useState(false);
-const [sortKey, setSortKey] = useState("updatedAt");
+  const [sortKey, setSortKey] = useState("updatedAt");
   const [isPC, setIsPC] = useState(window.innerWidth >= 768);
   const searchRef = useRef(null);
+  const [page, setPage] = useState("pantry");
+  const [shoppingList, setShoppingList] = useState([]);
+  const [showAddShoppingModal, setShowAddShoppingModal] = useState(false);
+  const [shoppingForm, setShoppingForm] = useState({ name: "", amount: "" });
 
   useEffect(() => {
     const handleResize = () => setIsPC(window.innerWidth >= 768);
@@ -61,6 +65,12 @@ const [sortKey, setSortKey] = useState("updatedAt");
       const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setItems(data);
     });
+    return unsubscribe;
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) { setShoppingList([]); return; }
+    const unsubscribe = subscribeShoppingList(user.uid, setShoppingList);
     return unsubscribe;
   }, [user]);
 
@@ -179,6 +189,186 @@ const [sortKey, setSortKey] = useState("updatedAt");
         <button onClick={login} style={{ background: COLORS.accent, color: "#fff", border: "none", borderRadius: 24, padding: "12px 28px", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
           Googleでログイン
         </button>
+      </div>
+    );
+  }
+
+  const outOfStockItems = items.filter(i => i.status === "在庫なし");
+  const shoppingListIds = new Set(
+    shoppingList
+      .filter(s => s.recipeId === null && outOfStockItems.some(o => o.name === s.name))
+      .map(s => s.name)
+  );
+
+  const getPantryStatus = (name) => {
+    const found = items.find(i => i.name.includes(name) || name.includes(i.name));
+    return found ? found.status : null;
+  };
+
+  const handleAddToShoppingList = async (item) => {
+    await addShoppingItem(user.uid, { name: item.name, amount: "", recipeId: null, recipeName: null });
+  };
+
+  const handleToggleChecked = async (item) => {
+    await updateShoppingItemChecked(user.uid, item.id, !item.checked);
+  };
+
+  const handleDeleteShoppingItem = async (id) => {
+    await deleteShoppingItem(user.uid, id);
+  };
+
+  const handlePurchaseComplete = async () => {
+    const checkedItems = shoppingList.filter(i => i.checked);
+    if (checkedItems.length === 0) return;
+    if (!window.confirm(`チェックした${checkedItems.length}件を購入済みにしますか？`)) return;
+    for (const item of checkedItems) {
+      await deleteShoppingItem(user.uid, item.id);
+      const pantryItem = items.find(i => i.name.includes(item.name) || item.name.includes(i.name));
+      if (pantryItem) {
+        const ref = doc(db, "users", user.uid, "pantry", pantryItem.id);
+        await setDoc(ref, {
+          ...pantryItem,
+          status: "在庫あり",
+          updatedAt: new Date().toLocaleDateString("ja-JP"),
+          updatedTimestamp: serverTimestamp(),
+        });
+      }
+    }
+  };
+
+  const handleAddShoppingManual = async () => {
+    if (!shoppingForm.name.trim()) return;
+    await addShoppingItem(user.uid, { name: shoppingForm.name, amount: shoppingForm.amount, recipeId: null, recipeName: null });
+    setShoppingForm({ name: "", amount: "" });
+    setShowAddShoppingModal(false);
+  };
+
+  if (page === "shopping") {
+    const checkedCount = shoppingList.filter(i => i.checked).length;
+    return (
+      <div style={{ fontFamily: "'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif", background: COLORS.bg, minHeight: "100vh" }}>
+        <div style={{ background: COLORS.white, borderBottom: `1px solid ${COLORS.border}`, padding: "12px 24px", position: "sticky", top: 0, zIndex: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", maxWidth: 700, margin: "0 auto", position: "relative" }}>
+            <div style={{ width: 40 }} />
+            <img src="/logo.png" alt="もぐポケ" style={{ height: 100 }} />
+            <div style={{ width: 40 }} />
+          </div>
+        </div>
+
+        <div style={{ maxWidth: 700, margin: "0 auto", padding: "16px 16px 100px" }}>
+          <div style={{ fontWeight: 700, fontSize: 16, color: COLORS.text, marginBottom: 16 }}>🛒 買い物リスト</div>
+
+          {/* 在庫なしエリア */}
+          {outOfStockItems.length > 0 && (
+            <div style={{ background: COLORS.white, borderRadius: 14, padding: "14px 16px", marginBottom: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, marginBottom: 10 }}>🧊 在庫なしの食材</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {outOfStockItems.map(item => {
+                  const added = shoppingListIds.has(item.name);
+                  return (
+                    <div key={item.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 10px", background: added ? "#f5f5f5" : COLORS.bg, borderRadius: 10 }}>
+                      <span style={{ fontSize: 14, color: added ? COLORS.textLight : COLORS.text }}>{item.name}</span>
+                      {added ? (
+                        <span style={{ fontSize: 11, color: COLORS.accent, fontWeight: 700 }}>追加済み ✓</span>
+                      ) : (
+                        <button onClick={() => handleAddToShoppingList(item)} style={{ background: COLORS.accent, color: "#fff", border: "none", borderRadius: 16, padding: "4px 12px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>＋ リストに追加</button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* 買い物リスト本体 */}
+          <div style={{ background: COLORS.white, borderRadius: 14, padding: "14px 16px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, marginBottom: 10 }}>📋 リスト</div>
+            {shoppingList.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "24px 0", color: "#bbb", fontSize: 13 }}>リストはまだ空です</div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {shoppingList.map(item => {
+                  const status = getPantryStatus(item.name);
+                  const borderColor = status === "在庫あり" ? "#2ecc71" : status === "残り少ない" ? "#f0ad4e" : "#e74c3c";
+                  const bgColor = status === "在庫あり" ? "#d4f5e2" : status === "残り少ない" ? "#fff3cd" : "#fde8e8";
+                  return (
+                    <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: item.checked ? "#f5f5f5" : bgColor, borderRadius: 10, borderLeft: `4px solid ${item.checked ? "#ccc" : borderColor}` }}>
+                      <input type="checkbox" checked={item.checked} onChange={() => handleToggleChecked(item)} style={{ width: 18, height: 18, cursor: "pointer", accentColor: COLORS.accent, flexShrink: 0 }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: item.checked ? COLORS.textLight : COLORS.text, textDecoration: item.checked ? "line-through" : "none" }}>
+                          {item.name}{item.amount ? `　${item.amount}` : ""}
+                        </div>
+                        {item.recipeName && (
+                          <div style={{ fontSize: 11, color: COLORS.textLight, marginTop: 2 }}>📖 {item.recipeName}</div>
+                        )}
+                      </div>
+                      <button onClick={() => handleDeleteShoppingItem(item.id)} style={{ background: "#fde8e8", border: "none", borderRadius: 8, padding: "4px 10px", fontSize: 12, cursor: "pointer", color: "#c0392b", flexShrink: 0 }}>削除</button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <button onClick={() => setShowAddShoppingModal(true)} style={{ width: "100%", marginTop: 14, padding: "10px 0", background: COLORS.bg, border: `1.5px dashed ${COLORS.border}`, borderRadius: 10, fontSize: 13, color: COLORS.textLight, cursor: "pointer" }}>
+              ＋ 手動で追加
+            </button>
+
+            {checkedCount > 0 && (
+              <button onClick={handlePurchaseComplete} style={{ width: "100%", marginTop: 10, padding: "12px 0", background: COLORS.accent, border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, color: "#fff", cursor: "pointer" }}>
+                購入完了（{checkedCount}件）→
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* 手動追加モーダル */}
+        {showAddShoppingModal && (
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 100, display: "flex", alignItems: "flex-end", justifyContent: "center" }} onClick={e => e.target === e.currentTarget && setShowAddShoppingModal(false)}>
+            <div style={{ background: COLORS.white, borderRadius: "20px 20px 0 0", padding: "24px 20px 36px", width: "100%", maxWidth: 700, boxSizing: "border-box" }}>
+              <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 20, color: COLORS.text }}>アイテムを追加</div>
+              <label style={lbl}>アイテム名</label>
+              <input value={shoppingForm.name} onChange={e => setShoppingForm({ ...shoppingForm, name: e.target.value })} placeholder="例：トイレットペーパー" style={inp} />
+              <label style={lbl}>数量（任意）</label>
+              <input value={shoppingForm.amount} onChange={e => setShoppingForm({ ...shoppingForm, amount: e.target.value })} placeholder="例：1袋" style={inp} />
+              <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+                <button onClick={() => setShowAddShoppingModal(false)} style={{ flex: 1, padding: 12, border: `1.5px solid ${COLORS.border}`, borderRadius: 12, background: COLORS.white, fontSize: 14, cursor: "pointer", color: COLORS.text }}>キャンセル</button>
+                <button onClick={handleAddShoppingManual} style={{ flex: 2, padding: 12, border: "none", borderRadius: 12, background: COLORS.accent, color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>追加する</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* BottomNav */}
+        <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: COLORS.white, borderTop: `1px solid ${COLORS.border}`, display: "flex", zIndex: 10 }}>
+          <button
+            onClick={() => { setPage("pantry"); searchRef.current?.focus(); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+            style={{ flex: 1, padding: "10px 0 14px", background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, color: COLORS.textLight, fontSize: 10 }}
+          >
+            <Search size={20} color={COLORS.textLight} />
+            探す
+          </button>
+          <button
+            onClick={openAdd}
+            style={{ flex: 1, padding: "10px 0 14px", background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, color: COLORS.textLight, fontSize: 10 }}
+          >
+            <Plus size={20} color={COLORS.textLight} />
+            追加
+          </button>
+          <button
+            onClick={() => setPage("shopping")}
+            style={{ flex: 1, padding: "10px 0 14px", background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, color: COLORS.accent, fontSize: 10 }}
+          >
+            <ShoppingCart size={20} color={COLORS.accent} />
+            買い物
+          </button>
+          <button
+            onClick={logout}
+            style={{ flex: 1, padding: "10px 0 14px", background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, color: COLORS.textLight, fontSize: 10 }}
+          >
+            <LogOut size={20} color={COLORS.textLight} />
+            ログアウト
+          </button>
+        </div>
       </div>
     );
   }
@@ -350,18 +540,25 @@ const [sortKey, setSortKey] = useState("updatedAt");
       {/* BottomNav */}
       <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: COLORS.white, borderTop: `1px solid ${COLORS.border}`, display: "flex", zIndex: 10 }}>
         <button
-          onClick={() => { searchRef.current?.focus(); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-          style={{ flex: 1, padding: "10px 0 14px", background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, color: COLORS.textLight, fontSize: 10 }}
+          onClick={() => { setPage("pantry"); searchRef.current?.focus(); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+          style={{ flex: 1, padding: "10px 0 14px", background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, color: page === "pantry" ? COLORS.accent : COLORS.textLight, fontSize: 10 }}
         >
-          <Search size={20} color={COLORS.textLight} />
+          <Search size={20} color={page === "pantry" ? COLORS.accent : COLORS.textLight} />
           探す
         </button>
         <button
           onClick={openAdd}
-          style={{ flex: 1, padding: "10px 0 14px", background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, color: COLORS.accent, fontSize: 10 }}
+          style={{ flex: 1, padding: "10px 0 14px", background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, color: COLORS.textLight, fontSize: 10 }}
         >
-          <Plus size={20} color={COLORS.accent} />
+          <Plus size={20} color={COLORS.textLight} />
           追加
+        </button>
+        <button
+          onClick={() => setPage("shopping")}
+          style={{ flex: 1, padding: "10px 0 14px", background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, color: page === "shopping" ? COLORS.accent : COLORS.textLight, fontSize: 10 }}
+        >
+          <ShoppingCart size={20} color={page === "shopping" ? COLORS.accent : COLORS.textLight} />
+          買い物
         </button>
         <button
           onClick={logout}
