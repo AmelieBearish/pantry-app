@@ -41,7 +41,11 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    getRedirectResult(auth).catch(() => {});
+    getRedirectResult(auth).then((result) => {
+      console.log("redirectResult:", result);
+    }).catch((err) => {
+      console.error("redirectError:", err);
+    });
     const unsubscribe = onAuthStateChanged(auth, (u) => {
       setUser(u);
       setAuthLoading(false);
