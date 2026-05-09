@@ -33,11 +33,12 @@ export async function addShoppingItem(uid, item) {
     amount: item.amount ?? '',
     recipeId: item.recipeId ?? null,
     recipeName: item.recipeName ?? null,
+    registerToPantry: item.registerToPantry ?? false,
+    category: item.category ?? null,
     checked: false,
     addedAt: serverTimestamp(),
   })
 }
-
 // 買い物リスト：チェック状態の更新
 export async function updateShoppingItemChecked(uid, itemId, checked) {
   const ref = doc(db, 'users', uid, 'shoppingList', itemId)
