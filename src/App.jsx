@@ -63,9 +63,15 @@ export default function App() {
     return unsubscribe;
   }, [user]);
 
-  const login = () => {
+  const login = async () => {
     const provider = new GoogleAuthProvider();
-    signInWithRedirect(auth, provider);
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (err) {
+      if (err.code === "auth/popup-blocked") {
+        signInWithRedirect(auth, provider);
+      }
+    }
   };
 
   const logout = () => signOut(auth);
