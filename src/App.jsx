@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { Search, Plus, LogOut } from "lucide-react";
 import { auth, db } from "./firebase";
 import { GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 import { collection, doc, onSnapshot, setDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
@@ -245,21 +246,21 @@ export default function App() {
           onClick={() => { searchRef.current?.focus(); window.scrollTo({ top: 0, behavior: "smooth" }); }}
           style={{ flex: 1, padding: "10px 0 14px", background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, color: COLORS.textLight, fontSize: 10 }}
         >
-          <span style={{ fontSize: 20 }}>🔍</span>
+          <Search size={20} color={COLORS.textLight} />
           探す
         </button>
         <button
           onClick={openAdd}
           style={{ flex: 1, padding: "10px 0 14px", background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, color: COLORS.accent, fontSize: 10 }}
         >
-          <span style={{ fontSize: 20 }}>＋</span>
+          <Plus size={20} color={COLORS.accent} />
           追加
         </button>
         <button
           onClick={logout}
           style={{ flex: 1, padding: "10px 0 14px", background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, color: COLORS.textLight, fontSize: 10 }}
         >
-          <span style={{ fontSize: 20 }}>👤</span>
+          <LogOut size={20} color={COLORS.textLight} />
           ログアウト
         </button>
       </div>
