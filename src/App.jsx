@@ -31,7 +31,14 @@ export default function App() {
   const [activeTab, setActiveTab] = useState("すべて");
   const [search, setSearch] = useState("");
   const [showMenu, setShowMenu] = useState(false);
+  const [isPC, setIsPC] = useState(window.innerWidth >= 768);
   const searchRef = useRef(null);
+
+  useEffect(() => {
+    const handleResize = () => setIsPC(window.innerWidth >= 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => {
@@ -138,12 +145,14 @@ export default function App() {
           <div style={{ width: 40 }} />
           <img src="/logo.png" alt="もぐポケ" style={{ height: 100 }} />
           <div style={{ position: "relative", width: 40, display: "flex", justifyContent: "flex-end" }}>
-            <button
-              onClick={() => setShowMenu(v => !v)}
-              style={{ background: "none", border: "none", fontSize: 22, cursor: "pointer", color: COLORS.textLight, padding: 4 }}
-            >
-              •••
-            </button>
+            {isPC && (
+              <button
+                onClick={() => setShowMenu(v => !v)}
+                style={{ background: "none", border: "none", fontSize: 22, cursor: "pointer", color: COLORS.textLight, padding: 4 }}
+              >
+                •••
+              </button>
+            )}
             {showMenu && (
               <div
                 style={{ position: "absolute", top: 36, right: 0, background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: "0 4px 16px rgba(0,0,0,0.10)", minWidth: 160, zIndex: 20 }}
