@@ -50,3 +50,9 @@ export async function deleteShoppingItem(uid, itemId) {
   const ref = doc(db, 'users', uid, 'shoppingList', itemId)
   await deleteDoc(ref)
 }
+
+// 買い物リスト：アイテム編集
+export async function updateShoppingItem(uid, itemId, data) {
+  const ref = doc(db, 'users', uid, 'shoppingList', itemId)
+  await updateDoc(ref, data)
+}
