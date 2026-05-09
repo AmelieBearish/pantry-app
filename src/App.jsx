@@ -215,7 +215,7 @@ export default function App() {
             const count = cat === "すべて"
               ? items.filter(i => i.status === "在庫あり" || i.status === "残り少ない").length
               : items.filter(i => i.category === cat && (i.status === "在庫あり" || i.status === "残り少ない")).length;
-            const label = count > 0 ? `${cat}(${count})` : cat;
+            const label = count > 0 ? `${cat} (${count})` : cat;
             return (
               <button key={cat} onClick={() => setActiveTab(cat)} style={{ background: activeTab === cat ? COLORS.accentDark : COLORS.white, color: activeTab === cat ? "#fff" : "#666", border: "1.5px solid " + (activeTab === cat ? COLORS.accentDark : "#ddd"), borderRadius: 20, padding: "6px 10px", fontSize: 12, fontWeight: activeTab === cat ? 700 : 400, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
                 {label}
