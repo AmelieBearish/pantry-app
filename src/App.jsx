@@ -207,6 +207,33 @@ export default function App() {
           ))}
         </div>
 
+        {(() => {
+          const alertItems = items.filter(item => {
+            const exp = getExpiryInfo(item.expiryDate);
+            return exp && (exp.type === "expired" || exp.type === "danger");
+          });
+          if (alertItems.length === 0) return null;
+          return (
+            <div style={{ background: "#fff5f5", border: "0.5px solid #f5c6c6", borderRadius: 12, padding: "10px 14px", marginBottom: 16 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#c0392b", marginBottom: 8 }}>⚠️ 要確認</div>
+              {alertItems.map(item => {
+                const exp = getExpiryInfo(item.expiryDate);
+                const sc = STATUS_COLORS[item.status];
+                const isExpired = exp.type === "expired";
+                return (
+                  <div key={item.id} style={{ background: isExpired ? "#f0f0f0" : COLORS.white, borderRadius: 10, padding: "10px 12px", marginBottom: 6, display: "flex", alignItems: "center", justifyContent: "space-between", borderLeft: `3px solid ${isExpired ? "#ccc" : "#e74c3c"}` }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: isExpired ? "#aaa" : COLORS.text }}>{item.name}</div>
+                      <div style={{ fontSize: 11, color: isExpired ? "#aaa" : "#e74c3c", fontWeight: isExpired ? 400 : 700 }}>{isExpired ? "期限切れ" : `● ${exp.label}`}</div>
+                    </div>
+                    <div style={{ fontSize: 11, background: isExpired ? "#eee" : sc.bg, color: isExpired ? "#aaa" : sc.text, borderRadius: 20, padding: "3px 10px", fontWeight: 700 }}>● {item.status}</div>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
+
         {filtered.length === 0 ? (
           <div style={{ textAlign: "center", padding: "48px 0", color: "#bbb", fontSize: 14 }}>
             <div style={{ fontSize: 36, marginBottom: 8 }}>🥬</div>
