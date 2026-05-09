@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Search, Plus, LogOut, ShoppingCart } from "lucide-react";
-import { auth, db, subscribeShoppingList, addShoppingItem, updateShoppingItemChecked, deleteShoppingItem } from "./firebase";
+import { auth, db, subscribeShoppingList, addShoppingItem, updateShoppingItemChecked, deleteShoppingItem, updateShoppingItem } from "./firebase";
 import { GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "firebase/auth";
 import { collection, doc, onSnapshot, setDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
 
@@ -38,6 +38,9 @@ export default function App() {
   const [shoppingList, setShoppingList] = useState([]);
   const [showAddShoppingModal, setShowAddShoppingModal] = useState(false);
   const [shoppingForm, setShoppingForm] = useState({ name: "", amount: "", registerToPantry: false, category: "野菜" });
+  const [editShoppingTarget, setEditShoppingTarget] = useState(null);
+  const [editShoppingForm, setEditShoppingForm] = useState({ amount: "", memo: "" });
+  const [showEditShoppingModal, setShowEditShoppingModal] = useState(false);
 
   useEffect(() => {
     const handleResize = () => setIsPC(window.innerWidth >= 768);
@@ -247,6 +250,22 @@ export default function App() {
     }
   };
 
+  const handleOpenEditShopping = (item) => {
+    setEditShoppingTarget(item.id);
+    setEditShoppingForm({ amount: item.amount || "", memo: item.memo || "" });
+    setShowEditShoppingModal(true);
+  };
+
+  const handleSaveEditShopping = async () => {
+    if (!editShoppingTarget) return;
+    await updateShoppingItem(user.uid, editShoppingTarget, {
+      amount: editShoppingForm.amount,
+      memo: editShoppingForm.memo,
+    });
+    setShowEditShoppingModal(false);
+    setEditShoppingTarget(null);
+  };
+
   const handleAddToShoppingFromCard = async (item) => {
     const already = shoppingList.some(s => s.name === item.name);
     if (already) {
@@ -258,8 +277,15 @@ export default function App() {
 
   const handleAddShoppingManual = async () => {
     if (!shoppingForm.name.trim()) return;
-    await addShoppingItem(user.uid, { name: shoppingForm.name, amount: shoppingForm.amount, recipeId: null, recipeName: null });
-    setShoppingForm({ name: "", amount: "" });
+    await addShoppingItem(user.uid, {
+      name: shoppingForm.name,
+      amount: shoppingForm.amount,
+      recipeId: null,
+      recipeName: null,
+      registerToPantry: shoppingForm.registerToPantry,
+      category: shoppingForm.registerToPantry ? shoppingForm.category : null,
+    });
+    setShoppingForm({ name: "", amount: "", registerToPantry: false, category: "野菜" });
     setShowAddShoppingModal(false);
   };
 
@@ -321,8 +347,17 @@ export default function App() {
                         {item.recipeName && (
                           <div style={{ fontSize: 11, color: COLORS.textLight, marginTop: 2 }}>📖 {item.recipeName}</div>
                         )}
+                        {item.registerToPantry && item.category && (
+                          <div style={{ fontSize: 11, color: COLORS.accent, marginTop: 2 }}>📦 {item.category}・購入後に在庫登録</div>
+                        )}
+                        {item.memo && (
+                          <div style={{ fontSize: 11, color: COLORS.textLight, marginTop: 2 }}>📝 {item.memo}</div>
+                        )}
                       </div>
-                      <button onClick={() => handleDeleteShoppingItem(item.id)} style={{ background: "#fde8e8", border: "none", borderRadius: 8, padding: "4px 10px", fontSize: 12, cursor: "pointer", color: "#c0392b", flexShrink: 0 }}>削除</button>
+                      <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                        <button onClick={() => handleOpenEditShopping(item)} style={{ background: COLORS.bg, border: "none", borderRadius: 8, padding: "4px 10px", fontSize: 12, cursor: "pointer", color: COLORS.textLight }}>編集</button>
+                        <button onClick={() => handleDeleteShoppingItem(item.id)} style={{ background: "#fde8e8", border: "none", borderRadius: 8, padding: "4px 10px", fontSize: 12, cursor: "pointer", color: "#c0392b" }}>削除</button>
+                      </div>
                     </div>
                   );
                 })}
@@ -340,6 +375,23 @@ export default function App() {
             )}
           </div>
         </div>
+
+       {/* 編集モーダル */}
+        {showEditShoppingModal && (
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 100, display: "flex", alignItems: "flex-end", justifyContent: "center" }} onClick={e => e.target === e.currentTarget && setShowEditShoppingModal(false)}>
+            <div style={{ background: COLORS.white, borderRadius: "20px 20px 0 0", padding: "24px 20px 36px", width: "100%", maxWidth: 700, boxSizing: "border-box" }}>
+              <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 20, color: COLORS.text }}>アイテムを編集</div>
+              <label style={lbl}>数量（任意）</label>
+              <input value={editShoppingForm.amount} onChange={e => setEditShoppingForm({ ...editShoppingForm, amount: e.target.value })} placeholder="例：2個" style={inp} />
+              <label style={lbl}>メモ（任意）</label>
+              <input value={editShoppingForm.memo} onChange={e => setEditShoppingForm({ ...editShoppingForm, memo: e.target.value })} placeholder="例：安い方を買う" style={inp} />
+              <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+                <button onClick={() => setShowEditShoppingModal(false)} style={{ flex: 1, padding: 12, border: `1.5px solid ${COLORS.border}`, borderRadius: 12, background: COLORS.white, fontSize: 14, cursor: "pointer", color: COLORS.text }}>キャンセル</button>
+                <button onClick={handleSaveEditShopping} style={{ flex: 2, padding: 12, border: "none", borderRadius: 12, background: COLORS.accent, color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>保存する</button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* 手動追加モーダル */}
         {showAddShoppingModal && (
