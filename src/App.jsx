@@ -135,7 +135,7 @@ export default function App() {
       <div style={{ background: COLORS.white, borderBottom: `1px solid ${COLORS.border}`, padding: "12px 24px", position: "sticky", top: 0, zIndex: 10 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", maxWidth: 700, margin: "0 auto", position: "relative" }}>
           <div style={{ width: 40 }} />
-          <img src="/logo.png" alt="もぐポケ" style={{ height: 64 }} />
+          <img src="/logo.png" alt="もぐポケ" style={{ height: 100 }} />
           <div style={{ position: "relative", width: 40, display: "flex", justifyContent: "flex-end" }}>
             <button
               onClick={() => setShowMenu(v => !v)}
