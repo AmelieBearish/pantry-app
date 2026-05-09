@@ -77,6 +77,7 @@ export default function App() {
   };
 
   const removeItem = async (id) => {
+    if (!window.confirm("この食材を削除しますか？")) return;
     await deleteDoc(doc(db, "users", user.uid, "pantry", id));
   };
 
