@@ -27,7 +27,7 @@ export default function App() {
   const [items, setItems] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
-  const [form, setForm] = useState({ name: "", category: "野菜", status: "在庫あり", memo: "" });
+  const [form, setForm] = useState({ name: "", category: "野菜", status: "在庫あり", memo: "", expiryDate: "" });
   const [activeTab, setActiveTab] = useState("すべて");
   const [search, setSearch] = useState("");
   const [showMenu, setShowMenu] = useState(false);
@@ -94,13 +94,13 @@ export default function App() {
 
   const openAdd = () => {
     setEditTarget(null);
-    setForm({ name: "", category: "野菜", status: "在庫あり", memo: "" });
+    setForm({ name: "", category: "野菜", status: "在庫あり", memo: "", expiryDate: "" });
     setShowModal(true);
   };
 
   const openEdit = (item) => {
     setEditTarget(item.id);
-    setForm({ name: item.name, category: item.category, status: item.status, memo: item.memo || "" });
+    setForm({ name: item.name, category: item.category, status: item.status, memo: item.memo || "", expiryDate: item.expiryDate || "" });
     setShowModal(true);
   };
 
@@ -118,6 +118,20 @@ export default function App() {
   });
 
   const statusCount = (s) => items.filter(i => i.status === s).length;
+
+  const getExpiryInfo = (expiryDate) => {
+    if (!expiryDate) return null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const expiry = new Date(expiryDate);
+    expiry.setHours(0, 0, 0, 0);
+    const diffDays = Math.floor((expiry - today) / (1000 * 60 * 60 * 24));
+    if (diffDays < 0) return { type: "expired", label: "期限切れ" };
+    if (diffDays === 0) return { type: "danger", label: "今日まで" };
+    if (diffDays === 1) return { type: "danger", label: "明日まで" };
+    if (diffDays <= 3) return { type: "warning", label: `あと${diffDays}日` };
+    return { type: "normal", label: expiryDate };
+  };
 
   if (authLoading) {
     return (
@@ -203,13 +217,20 @@ export default function App() {
             {filtered.map(item => {
               const sc = STATUS_COLORS[item.status];
               return (
-                <div key={item.id} style={{ background: COLORS.white, borderRadius: 14, padding: "14px 16px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", display: "flex", alignItems: "center", gap: 12, borderLeft: `4px solid ${sc.dot}` }}>
+                <div key={item.id} style={{ background: getExpiryInfo(item.expiryDate)?.type === "expired" ? "#f0f0f0" : COLORS.white, borderRadius: 14, padding: "14px 16px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", display: "flex", alignItems: "center", gap: 12, borderLeft: `4px solid ${sc.dot}` }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                      <span style={{ fontWeight: 700, fontSize: 15, color: COLORS.text }}>{item.name}</span>
+                      <span style={{ fontWeight: 700, fontSize: 15, color: getExpiryInfo(item.expiryDate)?.type === "expired" ? "#aaa" : COLORS.text }}>{item.name}</span>
                       <span style={{ fontSize: 11, background: COLORS.bg, color: COLORS.textLight, borderRadius: 8, padding: "2px 8px" }}>{item.category}</span>
                     </div>
                     {item.memo && <div style={{ fontSize: 12, color: COLORS.textLight, marginTop: 3 }}>{item.memo}</div>}
+                    {(() => {
+                      const exp = getExpiryInfo(item.expiryDate);
+                      if (!exp) return null;
+                      const color = exp.type === "expired" ? "#aaa" : exp.type === "danger" ? "#e74c3c" : exp.type === "warning" ? "#f0ad4e" : COLORS.textLight;
+                      const dot = exp.type === "expired" ? "" : exp.type === "danger" ? "● " : exp.type === "warning" ? "● " : "";
+                      return <div style={{ fontSize: 11, color, marginTop: 3, fontWeight: exp.type === "danger" ? 700 : 400 }}>{dot}期限: {exp.label}</div>;
+                    })()}
                     <div style={{ fontSize: 11, color: "#ccc", marginTop: 4 }}>更新: {item.updatedAt}</div>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
@@ -240,6 +261,8 @@ export default function App() {
             <select value={form.status} onChange={e => setForm({...form, status: e.target.value})} style={inp}>
               {STATUS_OPTIONS.map(s => <option key={s}>{s}</option>)}
             </select>
+            <label style={lbl}>期限（任意）</label>
+            <input type="date" value={form.expiryDate} onChange={e => setForm({...form, expiryDate: e.target.value})} style={inp} />
             <label style={lbl}>メモ（任意）</label>
             <input value={form.memo} onChange={e => setForm({...form, memo: e.target.value})} placeholder="例：冷凍中、コストコで買う" style={inp} />
             <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
