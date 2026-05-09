@@ -31,6 +31,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState("すべて");
   const [search, setSearch] = useState("");
   const [showMenu, setShowMenu] = useState(false);
+const [sortKey, setSortKey] = useState("updatedAt");
   const [isPC, setIsPC] = useState(window.innerWidth >= 768);
   const searchRef = useRef(null);
 
@@ -126,7 +127,25 @@ export default function App() {
     const q = search.trim();
     const matchSearch = !q || item.name.includes(q) || (item.memo || "").includes(q);
     return matchCat && matchSearch;
-  }).sort((a, b) => STATUS_OPTIONS.indexOf(a.status) - STATUS_OPTIONS.indexOf(b.status));
+  }).sort((a, b) => {
+    const aOut = a.status === "在庫なし";
+    const bOut = b.status === "在庫なし";
+    if (aOut !== bOut) return aOut ? 1 : -1;
+    if (sortKey === "updatedAt") {
+      const aTs = a.updatedTimestamp?.seconds ?? 0;
+      const bTs = b.updatedTimestamp?.seconds ?? 0;
+      return bTs - aTs;
+    }
+    if (sortKey === "expiryDate") {
+      const aD = a.expiryDate || "9999-99-99";
+      const bD = b.expiryDate || "9999-99-99";
+      return aD < bD ? -1 : aD > bD ? 1 : 0;
+    }
+    if (sortKey === "name") {
+      return a.name.localeCompare(b.name, "ja");
+    }
+    return 0;
+  });
 
   const statusCount = (s) => items.filter(i => i.status === s).length;
 
@@ -210,7 +229,8 @@ export default function App() {
           <input ref={searchRef} value={search} onChange={e => setSearch(e.target.value)} placeholder="食材を検索..." style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px 10px 36px", border: `1.5px solid ${COLORS.border}`, borderRadius: 12, fontSize: 14, background: COLORS.white, outline: "none", color: COLORS.text }} />
         </div>
 
-        <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4, marginBottom: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 16 }}>
+          <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4, flex: 1 }}>
           {["すべて", ...CATEGORIES].map(cat => {
             const count = cat === "すべて"
               ? items.filter(i => i.status === "在庫あり" || i.status === "残り少ない").length
@@ -222,6 +242,16 @@ export default function App() {
               </button>
             );
           })}
+        </div>
+          <select
+            value={sortKey}
+            onChange={e => setSortKey(e.target.value)}
+            style={{ background: "#fff", border: "1.5px solid #e0dbd2", borderRadius: 8, padding: "4px 8px", fontSize: 11, color: "#5a9e3a", fontWeight: 700, cursor: "pointer", flexShrink: 0, outline: "none" }}
+          >
+            <option value="updatedAt">更新日順</option>
+            <option value="expiryDate">期限順</option>
+            <option value="name">名前順</option>
+          </select>
         </div>
 
         {(() => {
