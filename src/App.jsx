@@ -126,7 +126,7 @@ export default function App() {
     const q = search.trim();
     const matchSearch = !q || item.name.includes(q) || (item.memo || "").includes(q);
     return matchCat && matchSearch;
-  });
+  }).sort((a, b) => STATUS_OPTIONS.indexOf(a.status) - STATUS_OPTIONS.indexOf(b.status));
 
   const statusCount = (s) => items.filter(i => i.status === s).length;
 
