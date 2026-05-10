@@ -86,7 +86,7 @@ export default function App() {
       await signInWithPopup(auth, provider);
     } catch (err) {
       if (err.code === "auth/popup-blocked") {
-        signInWithRedirect(auth, provider);
+        await signInWithRedirect(auth, provider);
       }
     }
   };
