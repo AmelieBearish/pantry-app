@@ -350,8 +350,18 @@ export default function App() {
                         {item.recipeName && (
                           <div style={{ fontSize: 11, color: COLORS.textLight, marginTop: 2 }}>📖 {item.recipeName}</div>
                         )}
-                        {item.registerToPantry && item.category && (
-                          <div style={{ fontSize: 11, color: COLORS.accent, marginTop: 2 }}>📦 {item.category}・購入後に在庫登録</div>
+                        {item.registerToPantry && (
+                          <div style={{ fontSize: 11, color: COLORS.accent, marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
+                            📦
+                            <select
+                              value={item.category || "その他"}
+                              onChange={e => updateShoppingItem(user.uid, item.id, { category: e.target.value })}
+                              style={{ fontSize: 11, color: COLORS.accent, border: "none", background: "transparent", fontWeight: 700, cursor: "pointer", padding: 0, outline: "none" }}
+                            >
+                              {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+                            </select>
+                            ・購入後に在庫登録
+                          </div>
                         )}
                         {item.memo && (
                           <div style={{ fontSize: 11, color: COLORS.textLight, marginTop: 2 }}>📝 {item.memo}</div>
