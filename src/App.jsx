@@ -34,7 +34,10 @@ export default function App() {
   const [sortKey, setSortKey] = useState("updatedAt");
   const [isPC, setIsPC] = useState(window.innerWidth >= 768);
   const searchRef = useRef(null);
-  const [page, setPage] = useState("pantry");
+  const [page, setPage] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("page") === "shopping" ? "shopping" : "pantry";
+  });
   const [shoppingList, setShoppingList] = useState([]);
   const [showAddShoppingModal, setShowAddShoppingModal] = useState(false);
   const [shoppingForm, setShoppingForm] = useState({ name: "", amount: "", registerToPantry: false, category: "野菜" });
