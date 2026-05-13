@@ -435,6 +435,33 @@ export default function App() {
           </div>
         )}
 
+        {/* 食材追加モーダル */}
+        {showModal && (
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 100, display: "flex", alignItems: "flex-end", justifyContent: "center" }} onClick={e => e.target === e.currentTarget && setShowModal(false)}>
+            <div style={{ background: COLORS.white, borderRadius: "20px 20px 0 0", padding: "24px 20px 36px", width: "100%", maxWidth: 700, boxSizing: "border-box" }}>
+              <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 20, color: COLORS.text }}>{editTarget ? "食材を編集" : "食材を追加"}</div>
+              <label style={lbl}>食材名</label>
+              <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="例：キャベツ" style={inp} />
+              <label style={lbl}>カテゴリ</label>
+              <select value={form.category} onChange={e => setForm({...form, category: e.target.value})} style={inp}>
+                {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+              </select>
+              <label style={lbl}>ステータス</label>
+              <select value={form.status} onChange={e => setForm({...form, status: e.target.value})} style={inp}>
+                {STATUS_OPTIONS.map(s => <option key={s}>{s}</option>)}
+              </select>
+              <label style={lbl}>期限（任意）</label>
+              <input type="date" value={form.expiryDate} onChange={e => setForm({...form, expiryDate: e.target.value})} style={inp} />
+              <label style={lbl}>メモ（任意）</label>
+              <input value={form.memo} onChange={e => setForm({...form, memo: e.target.value})} placeholder="例：冷凍中、コストコで買う" style={inp} />
+              <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+                <button onClick={() => setShowModal(false)} style={{ flex: 1, padding: 12, border: `1.5px solid ${COLORS.border}`, borderRadius: 12, background: COLORS.white, fontSize: 14, cursor: "pointer", color: COLORS.text }}>キャンセル</button>
+                <button onClick={saveForm} style={{ flex: 2, padding: 12, border: "none", borderRadius: 12, background: COLORS.accent, color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>{editTarget ? "保存する" : "追加する"}</button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* 手動追加モーダル */}
         {showAddShoppingModal && (
           <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 100, display: "flex", alignItems: "flex-end", justifyContent: "center" }} onClick={e => e.target === e.currentTarget && setShowAddShoppingModal(false)}>
