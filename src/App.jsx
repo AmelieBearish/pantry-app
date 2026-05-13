@@ -120,6 +120,16 @@ export default function App() {
     });
   };
 
+  const toggleFrozen = async (item) => {
+    const ref = doc(db, "users", user.uid, "pantry", item.id);
+    await setDoc(ref, {
+      ...item,
+      frozen: !item.frozen,
+      updatedAt: new Date().toLocaleDateString("ja-JP"),
+      updatedTimestamp: serverTimestamp(),
+    });
+  };
+
   const openAdd = () => {
     setEditTarget(null);
     setForm({ name: "", category: "野菜", status: "在庫あり", memo: "", expiryDate: "" });
@@ -128,7 +138,7 @@ export default function App() {
 
   const openEdit = (item) => {
     setEditTarget(item.id);
-    setForm({ name: item.name, category: item.category, status: item.status, memo: item.memo || "", expiryDate: item.expiryDate || "" });
+    setForm({ name: item.name, category: item.category, status: item.status, memo: item.memo || "", expiryDate: item.expiryDate || "", frozen: item.frozen || false });
     setShowModal(true);
   };
 
@@ -426,7 +436,7 @@ export default function App() {
               <label style={lbl}>数量（任意）</label>
               <input value={editShoppingForm.amount} onChange={e => setEditShoppingForm({ ...editShoppingForm, amount: e.target.value })} placeholder="例：2個" style={inp} />
               <label style={lbl}>メモ（任意）</label>
-              <input value={editShoppingForm.memo} onChange={e => setEditShoppingForm({ ...editShoppingForm, memo: e.target.value })} placeholder="例：安い方を買う" style={inp} />
+              <input value={editShoppingForm.memo} onChange={e => setEditShoppingForm({...editShoppingForm, memo: e.target.value})} placeholder="例：安い方を買う" style={inp} />
               <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
                 <button onClick={() => setShowEditShoppingModal(false)} style={{ flex: 1, padding: 12, border: `1.5px solid ${COLORS.border}`, borderRadius: 12, background: COLORS.white, fontSize: 14, cursor: "pointer", color: COLORS.text }}>キャンセル</button>
                 <button onClick={handleSaveEditShopping} style={{ flex: 2, padding: 12, border: "none", borderRadius: 12, background: COLORS.accent, color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>保存する</button>
@@ -434,6 +444,7 @@ export default function App() {
             </div>
           </div>
         )}
+      </div>
 
         {/* 食材追加モーダル */}
         {showModal && (
@@ -487,11 +498,11 @@ export default function App() {
                 <button onClick={() => setShowAddShoppingModal(false)} style={{ flex: 1, padding: 12, border: `1.5px solid ${COLORS.border}`, borderRadius: 12, background: COLORS.white, fontSize: 14, cursor: "pointer", color: COLORS.text }}>キャンセル</button>
                 <button onClick={handleAddShoppingManual} style={{ flex: 2, padding: 12, border: "none", borderRadius: 12, background: COLORS.accent, color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>追加する</button>
               </div>
-            </div>
           </div>
-        )}
-      
-        {/* BottomNav */}
+        </div>
+      )}
+
+     {/* BottomNav */}
       <div className="bottom-nav" style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: COLORS.white, borderTop: `1px solid ${COLORS.border}`, display: "flex", zIndex: 10 }}>
         <button
           onClick={() => { setPage("pantry"); searchRef.current?.focus(); window.scrollTo({ top: 0, behavior: "smooth" }); }}
@@ -658,7 +669,10 @@ export default function App() {
                     <div style={{ fontSize: 11, color: "#ccc", marginTop: 4 }}>更新: {item.updatedAt}</div>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
-                    <button onClick={() => cycleStatus(item)} style={{ background: sc.bg, color: sc.text, border: "none", borderRadius: 20, padding: "4px 12px", fontSize: 11, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>● {item.status}</button>
+                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      <button onClick={() => toggleFrozen(item)} style={{ background: item.frozen ? "#2980b9" : COLORS.bg, color: item.frozen ? "#fff" : COLORS.textLight, border: "none", borderRadius: 20, padding: "4px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>🧊</button>
+                      <button onClick={() => cycleStatus(item)} style={{ background: sc.bg, color: sc.text, border: "none", borderRadius: 20, padding: "4px 12px", fontSize: 11, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>● {item.status}</button>
+                    </div>
                     <div style={{ display: "flex", gap: 6 }}>
                       <button onClick={() => openEdit(item)} style={{ background: COLORS.bg, border: "none", borderRadius: 8, padding: "4px 10px", fontSize: 12, cursor: "pointer", color: COLORS.textLight }}>編集</button>
                       <button onClick={() => removeItem(item.id)} style={{ background: "#fde8e8", border: "none", borderRadius: 8, padding: "4px 10px", fontSize: 12, cursor: "pointer", color: "#c0392b" }}>削除</button>
@@ -691,11 +705,15 @@ export default function App() {
             <label style={lbl}>期限（任意）</label>
             <input type="date" value={form.expiryDate} onChange={e => setForm({...form, expiryDate: e.target.value})} style={inp} />
             <label style={lbl}>メモ（任意）</label>
-            <input value={form.memo} onChange={e => setForm({...form, memo: e.target.value})} placeholder="例：冷凍中、コストコで買う" style={inp} />
-            <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
-              <button onClick={() => setShowModal(false)} style={{ flex: 1, padding: 12, border: `1.5px solid ${COLORS.border}`, borderRadius: 12, background: COLORS.white, fontSize: 14, cursor: "pointer", color: COLORS.text }}>キャンセル</button>
-              <button onClick={saveForm} style={{ flex: 2, padding: 12, border: "none", borderRadius: 12, background: COLORS.accent, color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>{editTarget ? "保存する" : "追加する"}</button>
-            </div>
+              <input value={form.memo} onChange={e => setForm({...form, memo: e.target.value})} placeholder="例：冷凍中、コストコで買う" style={inp} />
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 16, padding: "12px 14px", background: COLORS.bg, borderRadius: 10 }}>
+                <input type="checkbox" id="frozen" checked={form.frozen || false} onChange={e => setForm({...form, frozen: e.target.checked})} style={{ width: 18, height: 18, cursor: "pointer", accentColor: "#2980b9", flexShrink: 0 }} />
+                <label htmlFor="frozen" style={{ fontSize: 13, color: COLORS.text, cursor: "pointer", fontWeight: 600 }}>🧊 冷凍中</label>
+              </div>
+              <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+                <button onClick={() => setShowModal(false)} style={{ flex: 1, padding: 12, border: `1.5px solid ${COLORS.border}`, borderRadius: 12, background: COLORS.white, fontSize: 14, cursor: "pointer", color: COLORS.text }}>キャンセル</button>
+                <button onClick={saveForm} style={{ flex: 2, padding: 12, border: "none", borderRadius: 12, background: COLORS.accent, color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>{editTarget ? "保存する" : "追加する"}</button>
+              </div>
           </div>
         </div>
       )}
