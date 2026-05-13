@@ -27,7 +27,7 @@ export default function App() {
   const [items, setItems] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
-  const [form, setForm] = useState({ name: "", category: "野菜", status: "在庫あり", memo: "", expiryDate: "" });
+  const [form, setForm] = useState({ name: "", category: "野菜", status: "在庫あり", memos: [""], expiryDate: "", frozen: false });
   const [activeTab, setActiveTab] = useState("すべて");
   const [search, setSearch] = useState("");
   const [showMenu, setShowMenu] = useState(false);
@@ -132,19 +132,22 @@ export default function App() {
 
   const openAdd = () => {
     setEditTarget(null);
-    setForm({ name: "", category: "野菜", status: "在庫あり", memo: "", expiryDate: "" });
+    setForm({ name: "", category: "野菜", status: "在庫あり", memos: [""], expiryDate: "", frozen: false });
     setShowModal(true);
   };
 
   const openEdit = (item) => {
     setEditTarget(item.id);
-    setForm({ name: item.name, category: item.category, status: item.status, memo: item.memo || "", expiryDate: item.expiryDate || "", frozen: item.frozen || false });
+    const rawMemo = item.memo;
+    const memos = Array.isArray(rawMemo) ? rawMemo : (rawMemo ? [rawMemo] : [""]);
+    setForm({ name: item.name, category: item.category, status: item.status, memos: memos.length > 0 ? memos : [""], expiryDate: item.expiryDate || "", frozen: item.frozen || false });
     setShowModal(true);
   };
 
   const saveForm = async () => {
     if (!form.name.trim()) return;
-    await saveItem(form);
+    const filteredMemos = form.memos.filter(m => m.trim() !== "");
+    await saveItem({ ...form, memo: filteredMemos });
     setShowModal(false);
   };
 
@@ -657,7 +660,11 @@ export default function App() {
                       <span style={{ fontWeight: 700, fontSize: 15, color: getExpiryInfo(item.expiryDate)?.type === "expired" ? "#aaa" : COLORS.text }}>{item.name}</span>
                       <span style={{ fontSize: 11, background: COLORS.bg, color: COLORS.textLight, borderRadius: 8, padding: "2px 8px" }}>{item.category}</span>
                     </div>
-                    {item.memo && <div style={{ fontSize: 12, color: COLORS.textLight, marginTop: 3 }}>{item.memo}</div>}
+                    {(() => {
+                      const memoArr = Array.isArray(item.memo) ? item.memo : (item.memo ? [item.memo] : []);
+                      const memoText = memoArr.filter(m => m.trim() !== "").join("、");
+                      return memoText ? <div style={{ fontSize: 12, color: COLORS.textLight, marginTop: 3 }}>{memoText}</div> : null;
+                    })()}
                     {(() => {
                       const exp = getExpiryInfo(item.expiryDate);
                       if (!exp) return null;
@@ -704,7 +711,26 @@ export default function App() {
             <label style={lbl}>期限（任意）</label>
             <input type="date" value={form.expiryDate} onChange={e => setForm({...form, expiryDate: e.target.value})} style={inp} />
             <label style={lbl}>メモ（任意）</label>
-              <input value={form.memo} onChange={e => setForm({...form, memo: e.target.value})} placeholder="例：冷凍中、コストコで買う" style={inp} />
+              {form.memos.map((memo, idx) => (
+                <div key={idx} style={{ display: "flex", alignItems: "center", gap: 6, marginTop: idx === 0 ? 0 : 6 }}>
+                  <input
+                    value={memo}
+                    onChange={e => {
+                      const next = [...form.memos];
+                      next[idx] = e.target.value;
+                      setForm({...form, memos: next});
+                    }}
+                    placeholder="例：冷凍3個"
+                    style={{ ...inp, marginTop: 0, flex: 1 }}
+                  />
+                  {idx === form.memos.length - 1 && (
+                    <button
+                      onClick={() => setForm({...form, memos: [...form.memos, ""]})}
+                      style={{ background: COLORS.bg, border: `1.5px solid ${COLORS.border}`, borderRadius: 8, padding: "8px 12px", fontSize: 16, cursor: "pointer", color: COLORS.textLight, flexShrink: 0 }}
+                    >＋</button>
+                  )}
+                </div>
+              ))}
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 16, padding: "12px 14px", background: COLORS.bg, borderRadius: 10 }}>
                 <input type="checkbox" id="frozen" checked={form.frozen || false} onChange={e => setForm({...form, frozen: e.target.checked})} style={{ width: 18, height: 18, cursor: "pointer", accentColor: "#2980b9", flexShrink: 0 }} />
                 <label htmlFor="frozen" style={{ fontSize: 13, color: COLORS.text, cursor: "pointer", fontWeight: 600 }}>🧊 冷凍中</label>
