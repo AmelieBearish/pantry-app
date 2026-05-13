@@ -295,11 +295,15 @@ export default function App() {
   if (page === "shopping") {
     const checkedCount = shoppingList.filter(i => i.checked).length;
     return (
-      <div style={{ fontFamily: "'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif", background: COLORS.bg, minHeight: "100vh" }}>
-        <div style={{ background: COLORS.white, borderBottom: `1px solid ${COLORS.border}`, padding: "12px 24px", position: "sticky", top: 0, zIndex: 10 }}>
+    <div style={{ fontFamily: "'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif", background: COLORS.bg, minHeight: "100vh" }}>
+      <style>{`
+        @media (min-width: 768px) { .bottom-nav { display: none !important; } }
+        @media (max-width: 767px) { .pc-menu { display: none !important; } }
+      `}</style>
+      <div style={{ background: COLORS.white, borderBottom: `1px solid ${COLORS.border}`, padding: "12px 24px", position: "sticky", top: 0, zIndex: 10 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", maxWidth: 700, margin: "0 auto", position: "relative" }}>
             <div style={{ width: 40 }} />
-            <img src="/logo.png" alt="もぐポケ" style={{ height: 100 }} />
+            <img src="/logo.png" alt="もぐポケ" onClick={() => setPage("pantry")} style={{ height: 100, cursor: "pointer" }} />
             <div style={{ width: 40 }} />
           </div>
         </div>
@@ -434,14 +438,14 @@ export default function App() {
             </div>
           </div>
         )}
-
+      
         {/* BottomNav */}
-        <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: COLORS.white, borderTop: `1px solid ${COLORS.border}`, display: "flex", zIndex: 10 }}>
-          <button
-            onClick={() => { setPage("pantry"); searchRef.current?.focus(); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-            style={{ flex: 1, padding: "10px 0 14px", background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, color: COLORS.textLight, fontSize: 10 }}
-          >
-            <Search size={20} color={COLORS.textLight} />
+      <div className="bottom-nav" style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: COLORS.white, borderTop: `1px solid ${COLORS.border}`, display: "flex", zIndex: 10 }}>
+        <button
+          onClick={() => { setPage("pantry"); searchRef.current?.focus(); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+          style={{ flex: 1, padding: "10px 0 14px", background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, color: page === "pantry" ? COLORS.accent : COLORS.textLight, fontSize: 10 }}
+        >
+          <Search size={20} color={page === "pantry" ? COLORS.accent : COLORS.textLight} />
             探す
           </button>
           <button
@@ -472,19 +476,21 @@ export default function App() {
 
   return (
     <div style={{ fontFamily: "'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif", background: COLORS.bg, minHeight: "100vh" }}>
+      <style>{`
+        @media (min-width: 768px) { .bottom-nav { display: none !important; } }
+        @media (max-width: 767px) { .pc-menu { display: none !important; } }
+      `}</style>
       <div style={{ background: COLORS.white, borderBottom: `1px solid ${COLORS.border}`, padding: "12px 24px", position: "sticky", top: 0, zIndex: 10 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", maxWidth: 700, margin: "0 auto", position: "relative" }}>
           <div style={{ width: 40 }} />
-          <img src="/logo.png" alt="もぐポケ" style={{ height: 100 }} />
-          <div style={{ position: "relative", width: 40, display: "flex", justifyContent: "flex-end" }}>
-            {isPC && (
-              <button
-                onClick={() => setShowMenu(v => !v)}
-                style={{ background: "none", border: "none", fontSize: 22, cursor: "pointer", color: COLORS.textLight, padding: 4 }}
-              >
-                •••
-              </button>
-            )}
+          <img src="/logo.png" alt="もぐポケ" onClick={() => setPage("pantry")} style={{ height: 100, cursor: "pointer" }} />
+          <div className="pc-menu" style={{ position: "relative", width: 40, display: "flex", justifyContent: "flex-end" }}>
+            <button
+              onClick={() => setShowMenu(v => !v)}
+              style={{ background: "none", border: "none", fontSize: 22, cursor: "pointer", color: COLORS.textLight, padding: 4 }}
+            >
+              •••
+            </button>
             {showMenu && (
               <div
                 style={{ position: "absolute", top: 36, right: 0, background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: "0 4px 16px rgba(0,0,0,0.10)", minWidth: 160, zIndex: 20 }}
@@ -492,6 +498,9 @@ export default function App() {
               >
                 <button onClick={openAdd} style={{ display: "block", width: "100%", padding: "12px 20px", background: "none", border: "none", textAlign: "left", fontSize: 14, cursor: "pointer", color: COLORS.text, borderBottom: `1px solid ${COLORS.border}` }}>
                   ＋ 食材を追加
+                </button>
+                <button onClick={() => { setPage("shopping"); setShowMenu(false); }} style={{ display: "block", width: "100%", padding: "12px 20px", background: "none", border: "none", textAlign: "left", fontSize: 14, cursor: "pointer", color: COLORS.text, borderBottom: `1px solid ${COLORS.border}` }}>
+                  🛒 買い物リスト
                 </button>
                 <button onClick={logout} style={{ display: "block", width: "100%", padding: "12px 20px", background: "none", border: "none", textAlign: "left", fontSize: 14, cursor: "pointer", color: COLORS.textLight }}>
                   ログアウト
@@ -637,8 +646,8 @@ export default function App() {
         </div>
       )}
 
-      {/* BottomNav */}
-      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: COLORS.white, borderTop: `1px solid ${COLORS.border}`, display: "flex", zIndex: 10 }}>
+     {/* BottomNav */}
+      <div className="bottom-nav" style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: COLORS.white, borderTop: `1px solid ${COLORS.border}`, display: "flex", zIndex: 10 }}>
         <button
           onClick={() => { setPage("pantry"); searchRef.current?.focus(); window.scrollTo({ top: 0, behavior: "smooth" }); }}
           style={{ flex: 1, padding: "10px 0 14px", background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, color: page === "pantry" ? COLORS.accent : COLORS.textLight, fontSize: 10 }}
