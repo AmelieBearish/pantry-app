@@ -444,7 +444,6 @@ export default function App() {
             </div>
           </div>
         )}
-      </div>
 
         {/* 食材追加モーダル */}
         {showModal && (
