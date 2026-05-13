@@ -301,10 +301,35 @@ export default function App() {
         @media (max-width: 767px) { .pc-menu { display: none !important; } }
       `}</style>
       <div style={{ background: COLORS.white, borderBottom: `1px solid ${COLORS.border}`, padding: "12px 24px", position: "sticky", top: 0, zIndex: 10 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", maxWidth: 700, margin: "0 auto", position: "relative" }}>
+         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", maxWidth: 700, margin: "0 auto", position: "relative" }}>
             <div style={{ width: 40 }} />
             <img src="/logo.png" alt="もぐポケ" onClick={() => setPage("pantry")} style={{ height: 100, cursor: "pointer" }} />
-            <div style={{ width: 40 }} />
+            <div style={{ position: "relative", width: 40, display: "flex", justifyContent: "flex-end" }}>
+              <div className="pc-menu" style={{ position: "relative", display: "flex", justifyContent: "flex-end" }}>
+                <button
+                  onClick={() => setShowMenu(v => !v)}
+                  style={{ background: "none", border: "none", fontSize: 22, cursor: "pointer", color: COLORS.textLight, padding: 4 }}
+                >
+                  •••
+                </button>
+                {showMenu && (
+                  <div
+                    style={{ position: "absolute", top: 36, right: 0, background: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: "0 4px 16px rgba(0,0,0,0.10)", minWidth: 160, zIndex: 20 }}
+                    onClick={() => setShowMenu(false)}
+                  >
+                    <button onClick={openAdd} style={{ display: "block", width: "100%", padding: "12px 20px", background: "none", border: "none", textAlign: "left", fontSize: 14, cursor: "pointer", color: COLORS.text, borderBottom: `1px solid ${COLORS.border}` }}>
+                      ＋ 食材を追加
+                    </button>
+                    <button onClick={() => { setPage("shopping"); setShowMenu(false); }} style={{ display: "block", width: "100%", padding: "12px 20px", background: "none", border: "none", textAlign: "left", fontSize: 14, cursor: "pointer", color: COLORS.text, borderBottom: `1px solid ${COLORS.border}` }}>
+                      🛒 買い物リスト
+                    </button>
+                    <button onClick={logout} style={{ display: "block", width: "100%", padding: "12px 20px", background: "none", border: "none", textAlign: "left", fontSize: 14, cursor: "pointer", color: COLORS.textLight }}>
+                      ログアウト
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -484,7 +509,8 @@ export default function App() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", maxWidth: 700, margin: "0 auto", position: "relative" }}>
           <div style={{ width: 40 }} />
           <img src="/logo.png" alt="もぐポケ" onClick={() => setPage("pantry")} style={{ height: 100, cursor: "pointer" }} />
-          <div className="pc-menu" style={{ position: "relative", width: 40, display: "flex", justifyContent: "flex-end" }}>
+          <div style={{ position: "relative", width: 40, display: "flex", justifyContent: "flex-end" }}>
+            <div className="pc-menu" style={{ position: "relative", display: "flex", justifyContent: "flex-end" }}>
             <button
               onClick={() => setShowMenu(v => !v)}
               style={{ background: "none", border: "none", fontSize: 22, cursor: "pointer", color: COLORS.textLight, padding: 4 }}
@@ -507,6 +533,7 @@ export default function App() {
                 </button>
               </div>
             )}
+            </div>
           </div>
         </div>
         <div style={{ maxWidth: 700, margin: "12px auto 0", display: "flex", gap: 12 }}>
