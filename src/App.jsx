@@ -609,12 +609,10 @@ export default function App() {
               <div style={{ color: COLORS.textLight, fontSize: 10, marginTop: 1 }}>{s}</div>
             </div>
           ))}
-          <button
-            onClick={() => setShowExportModal(true)}
-            style={{ background: COLORS.accent, color: "#fff", border: "none", borderRadius: 10, padding: "0 12px", fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0, alignSelf: "stretch" }}
-          >
-            📤 レシピ相談
-          </button>
+          <div onClick={() => setShowExportModal(true)} style={{ flex: 1, background: COLORS.bg, borderRadius: 10, padding: "8px 10px", textAlign: "center", cursor: "pointer" }}>
+            <div style={{ fontSize: 18, fontWeight: 700 }}>📄</div>
+            <div style={{ color: COLORS.textLight, fontSize: 10, marginTop: 1 }}>レシピ相談</div>
+          </div>
         </div>
       </div>
 
