@@ -611,7 +611,7 @@ export default function App() {
           ))}
           <button
             onClick={() => setShowExportModal(true)}
-            style={{ background: COLORS.accent, color: "#fff", border: "none", borderRadius: 10, padding: "8px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}
+            style={{ background: COLORS.accent, color: "#fff", border: "none", borderRadius: 10, padding: "0 12px", fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0, alignSelf: "stretch" }}
           >
             📤 レシピ相談
           </button>
