@@ -696,7 +696,7 @@ export default function App() {
                       const memoText = memoArr.filter(m => m.trim() !== "").join("、");
                       return memoText ? <div style={{ fontSize: 12, color: COLORS.textLight, marginTop: 3 }}>{memoText}</div> : null;
                     })()}
-                    {{(() => {
+                    {(() => {
                       if (item.status === "在庫なし") return null;
                       const exp = getExpiryInfo(item.expiryDate);
                       if (!exp) return null;
