@@ -725,7 +725,60 @@ export default function App() {
           </div>
         )}
       </div>
+{showExportModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 100, display: "flex", alignItems: "flex-end", justifyContent: "center" }} onClick={e => e.target === e.currentTarget && setShowExportModal(false)}>
+          <div style={{ background: COLORS.white, borderRadius: "20px 20px 0 0", padding: "24px 20px 36px", width: "100%", maxWidth: 700, boxSizing: "border-box" }}>
+            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 20, color: COLORS.text }}>📤 レシピ相談</div>
 
+            <label style={lbl}>人数</label>
+            <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+              {["1人", "2人", "3人", "4人以上"].map(v => (
+                <button key={v} onClick={() => setExportSettings({ ...exportSettings, people: v })} style={{ flex: 1, padding: "8px 0", border: `1.5px solid ${exportSettings.people === v ? COLORS.accent : COLORS.border}`, borderRadius: 10, background: exportSettings.people === v ? COLORS.accent : COLORS.white, color: exportSettings.people === v ? "#fff" : COLORS.text, fontSize: 13, fontWeight: exportSettings.people === v ? 700 : 400, cursor: "pointer" }}>{v}</button>
+              ))}
+            </div>
+
+            <label style={lbl}>大さじ小さじ表記</label>
+            <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+              {["あり", "なし"].map(v => (
+                <button key={v} onClick={() => setExportSettings({ ...exportSettings, unit: v })} style={{ flex: 1, padding: "8px 0", border: `1.5px solid ${exportSettings.unit === v ? COLORS.accent : COLORS.border}`, borderRadius: 10, background: exportSettings.unit === v ? COLORS.accent : COLORS.white, color: exportSettings.unit === v ? "#fff" : COLORS.text, fontSize: 13, fontWeight: exportSettings.unit === v ? 700 : 400, cursor: "pointer" }}>{v}</button>
+              ))}
+            </div>
+
+            <label style={lbl}>味付けの気分</label>
+            <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+              {["和食", "洋食", "中華", "何でも"].map(v => (
+                <button key={v} onClick={() => setExportSettings({ ...exportSettings, mood: v })} style={{ flex: 1, padding: "8px 0", border: `1.5px solid ${exportSettings.mood === v ? COLORS.accent : COLORS.border}`, borderRadius: 10, background: exportSettings.mood === v ? COLORS.accent : COLORS.white, color: exportSettings.mood === v ? "#fff" : COLORS.text, fontSize: 13, fontWeight: exportSettings.mood === v ? 700 : 400, cursor: "pointer" }}>{v}</button>
+              ))}
+            </div>
+
+            <label style={lbl}>調理時間</label>
+            <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+              {["15分以内", "30分以内", "こだわらない"].map(v => (
+                <button key={v} onClick={() => setExportSettings({ ...exportSettings, time: v })} style={{ flex: 1, padding: "8px 0", border: `1.5px solid ${exportSettings.time === v ? COLORS.accent : COLORS.border}`, borderRadius: 10, background: exportSettings.time === v ? COLORS.accent : COLORS.white, color: exportSettings.time === v ? "#fff" : COLORS.text, fontSize: 13, fontWeight: exportSettings.time === v ? 700 : 400, cursor: "pointer" }}>{v}</button>
+              ))}
+            </div>
+
+            <div style={{ marginTop: 20, background: COLORS.bg, borderRadius: 10, padding: "12px 14px" }}>
+              <div style={{ fontSize: 11, color: COLORS.textLight, marginBottom: 6, fontWeight: 600 }}>プレビュー</div>
+              <div style={{ fontSize: 12, color: COLORS.text, whiteSpace: "pre-wrap", lineHeight: 1.7 }}>{buildExportText()}</div>
+            </div>
+
+            <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+              <button onClick={() => setShowExportModal(false)} style={{ flex: 1, padding: 12, border: `1.5px solid ${COLORS.border}`, borderRadius: 12, background: COLORS.white, fontSize: 14, cursor: "pointer", color: COLORS.text }}>閉じる</button>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(buildExportText());
+                  setShowExportModal(false);
+                }}
+                style={{ flex: 2, padding: 12, border: "none", borderRadius: 12, background: COLORS.accent, color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer" }}
+              >
+                📋 コピーする
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {showModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 100, display: "flex", alignItems: "flex-end", justifyContent: "center" }} onClick={e => e.target === e.currentTarget && setShowModal(false)}>
           <div style={{ background: COLORS.white, borderRadius: "20px 20px 0 0", padding: "24px 20px 36px", width: "100%", maxWidth: 700, boxSizing: "border-box" }}>
