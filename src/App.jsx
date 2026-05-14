@@ -31,7 +31,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState("すべて");
   const [search, setSearch] = useState("");
   const [showMenu, setShowMenu] = useState(false);
-  const [sortKey, setSortKey] = useState("updatedAt");
+  const [sortKey, setSortKey] = useState("statusAndExpiry");
   const [isPC, setIsPC] = useState(window.innerWidth >= 768);
   const searchRef = useRef(null);
   const [page, setPage] = useState(() => {
@@ -171,10 +171,19 @@ export default function App() {
     const q = search.trim();
     const matchSearch = !q || item.name.includes(q) || (item.memo || "").includes(q);
     return matchCat && matchSearch;
-  }).sort((a, b) => {
+ }).sort((a, b) => {
     const aOut = a.status === "在庫なし";
     const bOut = b.status === "在庫なし";
     if (aOut !== bOut) return aOut ? 1 : -1;
+    if (sortKey === "statusAndExpiry") {
+      const statusOrder = { "残り少ない": 0, "在庫あり": 1 };
+      const aS = statusOrder[a.status] ?? 2;
+      const bS = statusOrder[b.status] ?? 2;
+      if (aS !== bS) return aS - bS;
+      const aD = a.expiryDate || "9999-99-99";
+      const bD = b.expiryDate || "9999-99-99";
+      return aD < bD ? -1 : aD > bD ? 1 : 0;
+    }
     if (sortKey === "updatedAt") {
       const aTs = a.updatedTimestamp?.seconds ?? 0;
       const bTs = b.updatedTimestamp?.seconds ?? 0;
@@ -197,7 +206,8 @@ export default function App() {
     if (!expiryDate) return null;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const expiry = new Date(expiryDate);
+    const [y, m, d] = expiryDate.split("-").map(Number);
+    const expiry = new Date(y, m - 1, d);
     expiry.setHours(0, 0, 0, 0);
     const diffDays = Math.floor((expiry - today) / (1000 * 60 * 60 * 24));
     if (diffDays < 0) return { type: "expired", label: "期限切れ" };
@@ -716,6 +726,7 @@ export default function App() {
             onChange={e => setSortKey(e.target.value)}
             style={{ background: "#fff", border: "1.5px solid #e0dbd2", borderRadius: 8, padding: "4px 8px", fontSize: 11, color: "#5a9e3a", fontWeight: 700, cursor: "pointer", flexShrink: 0, outline: "none" }}
           >
+            <option value="statusAndExpiry">残り少ない・期限順</option>
             <option value="updatedAt">更新日順</option>
             <option value="expiryDate">期限順</option>
             <option value="name">名前順</option>
