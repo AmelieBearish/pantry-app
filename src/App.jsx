@@ -649,6 +649,7 @@ export default function App() {
 
         {(() => {
           const alertItems = items.filter(item => {
+            if (item.status === "在庫なし") return false;
             const exp = getExpiryInfo(item.expiryDate);
             return exp && (exp.type === "expired" || exp.type === "danger");
           });
@@ -666,7 +667,7 @@ export default function App() {
                       <div style={{ fontSize: 13, fontWeight: 700, color: isExpired ? "#aaa" : COLORS.text }}>{item.name}</div>
                       <div style={{ fontSize: 11, color: isExpired ? "#aaa" : "#e74c3c", fontWeight: isExpired ? 400 : 700 }}>{isExpired ? "期限切れ" : `● ${exp.label}`}</div>
                     </div>
-                    <div style={{ fontSize: 11, background: isExpired ? "#eee" : sc.bg, color: isExpired ? "#aaa" : sc.text, borderRadius: 20, padding: "3px 10px", fontWeight: 700 }}>● {item.status}</div>
+                    <button onClick={() => cycleStatus(item)} style={{ fontSize: 11, background: isExpired ? "#eee" : sc.bg, color: isExpired ? "#aaa" : sc.text, borderRadius: 20, padding: "3px 10px", fontWeight: 700, border: "none", cursor: "pointer" }}>● {item.status}</button>
                   </div>
                 );
               })}
@@ -695,7 +696,8 @@ export default function App() {
                       const memoText = memoArr.filter(m => m.trim() !== "").join("、");
                       return memoText ? <div style={{ fontSize: 12, color: COLORS.textLight, marginTop: 3 }}>{memoText}</div> : null;
                     })()}
-                    {(() => {
+                    {{(() => {
+                      if (item.status === "在庫なし") return null;
                       const exp = getExpiryInfo(item.expiryDate);
                       if (!exp) return null;
                       const color = exp.type === "expired" ? "#aaa" : exp.type === "danger" ? "#e74c3c" : exp.type === "warning" ? "#f0ad4e" : COLORS.textLight;
