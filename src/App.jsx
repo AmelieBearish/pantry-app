@@ -303,7 +303,20 @@ export default function App() {
     }
     await addShoppingItem(user.uid, { name: item.name, amount: "", recipeId: null, recipeName: null });
   };
-
+    const buildExportText = () => {
+    const unitText = exportSettings.unit === "あり" ? "大さじ小さじ表記あり" : "大さじ小さじ表記なし";
+    const moodText = exportSettings.mood === "何でも" ? "今日は何でも良い気分です" : `今日は${exportSettings.mood}気分です`;
+    const timeText = exportSettings.time === "こだわらない" ? "" : `調理時間は${exportSettings.time}でお願いします。`;
+    const header = `${exportSettings.people}分、${unitText}、${moodText}。\n以下の食材を使ったレシピを提案してください。${timeText ? "\n" + timeText : ""}`;
+    const activeItems = items.filter(i => i.status !== "在庫なし");
+    const lines = CATEGORIES.map(cat => {
+      const catItems = activeItems.filter(i => i.category === cat);
+      if (catItems.length === 0) return null;
+      const names = catItems.map(i => i.frozen ? `${i.name}（冷凍）` : i.name).join("、");
+      return `【${cat}】\n・${names}`;
+    }).filter(Boolean);
+    return header + "\n" + lines.join("\n");
+  };
   const handleAddShoppingManual = async () => {
     if (!shoppingForm.name.trim()) return;
     await addShoppingItem(user.uid, {
@@ -589,13 +602,19 @@ export default function App() {
             </div>
           </div>
         </div>
-        <div style={{ maxWidth: 700, margin: "12px auto 0", display: "flex", gap: 12 }}>
+        <div style={{ maxWidth: 700, margin: "12px auto 0", display: "flex", gap: 12, alignItems: "center" }}>
           {STATUS_OPTIONS.map(s => (
             <div key={s} style={{ flex: 1, background: COLORS.bg, borderRadius: 10, padding: "8px 10px", textAlign: "center" }}>
               <div style={{ color: STATUS_COLORS[s].dot, fontSize: 18, fontWeight: 700 }}>{statusCount(s)}</div>
               <div style={{ color: COLORS.textLight, fontSize: 10, marginTop: 1 }}>{s}</div>
             </div>
           ))}
+          <button
+            onClick={() => setShowExportModal(true)}
+            style={{ background: COLORS.accent, color: "#fff", border: "none", borderRadius: 10, padding: "8px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}
+          >
+            📤 レシピ相談
+          </button>
         </div>
       </div>
 
