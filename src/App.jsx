@@ -255,17 +255,24 @@ export default function App() {
     const checkedItems = shoppingList.filter(i => i.checked);
     if (checkedItems.length === 0) return;
     if (!window.confirm(`チェックした${checkedItems.length}件を購入済みにしますか？`)) return;
+
+    const expiryTargets = [];
+
     for (const item of checkedItems) {
       await deleteShoppingItem(user.uid, item.id);
       const pantryItem = items.find(i => i.name.includes(item.name) || item.name.includes(i.name));
       if (pantryItem) {
-        const ref = doc(db, "users", user.uid, "pantry", pantryItem.id);
-        await setDoc(ref, {
-          ...pantryItem,
-          status: "在庫あり",
-          updatedAt: new Date().toLocaleDateString("ja-JP"),
-          updatedTimestamp: serverTimestamp(),
-        });
+        if (pantryItem.expiryDate) {
+          expiryTargets.push({ pantryItem, newExpiryDate: "", skipped: false });
+        } else {
+          const ref = doc(db, "users", user.uid, "pantry", pantryItem.id);
+          await setDoc(ref, {
+            ...pantryItem,
+            status: "在庫あり",
+            updatedAt: new Date().toLocaleDateString("ja-JP"),
+            updatedTimestamp: serverTimestamp(),
+          });
+        }
       } else if (item.registerToPantry && item.category) {
         const newRef = doc(collection(db, "users", user.uid, "pantry"));
         await setDoc(newRef, {
@@ -279,6 +286,26 @@ export default function App() {
         });
       }
     }
+
+    if (expiryTargets.length > 0) {
+      setExpiryUpdateItems(expiryTargets);
+      setShowExpiryUpdateModal(true);
+    }
+  };
+
+  const handleExpiryUpdateSave = async () => {
+    for (const entry of expiryUpdateItems) {
+      const ref = doc(db, "users", user.uid, "pantry", entry.pantryItem.id);
+      await setDoc(ref, {
+        ...entry.pantryItem,
+        status: "在庫あり",
+        expiryDate: entry.skipped ? "" : entry.newExpiryDate,
+        updatedAt: new Date().toLocaleDateString("ja-JP"),
+        updatedTimestamp: serverTimestamp(),
+      });
+    }
+    setShowExpiryUpdateModal(false);
+    setExpiryUpdateItems([]);
   };
 
   const handleOpenEditShopping = (item) => {
