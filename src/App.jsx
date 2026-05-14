@@ -53,6 +53,8 @@ export default function App() {
   }
 });
   const [showEditShoppingModal, setShowEditShoppingModal] = useState(false);
+  const [showExpiryUpdateModal, setShowExpiryUpdateModal] = useState(false);
+  const [expiryUpdateItems, setExpiryUpdateItems] = useState([]);
 
 
   useEffect(() => {
@@ -456,6 +458,52 @@ export default function App() {
             )}
           </div>
         </div>
+
+      {/* 期限再入力モーダル */}
+        {showExpiryUpdateModal && (
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 100, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+            <div style={{ background: COLORS.white, borderRadius: "20px 20px 0 0", padding: "24px 20px 36px", width: "100%", maxWidth: 700, boxSizing: "border-box" }}>
+              <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 6, color: COLORS.text }}>📅 期限を更新してください</div>
+              <div style={{ fontSize: 12, color: COLORS.textLight, marginBottom: 20 }}>購入した食材の新しい期限を入力してください。スキップすると期限なしになります。</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                {expiryUpdateItems.map((entry, idx) => (
+                  <div key={entry.pantryItem.id} style={{ background: COLORS.bg, borderRadius: 12, padding: "12px 14px" }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text, marginBottom: 8 }}>{entry.pantryItem.name}</div>
+                    <div style={{ fontSize: 11, color: COLORS.textLight, marginBottom: 6 }}>前回の期限：{entry.pantryItem.expiryDate}</div>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <input
+                        type="date"
+                        value={entry.newExpiryDate}
+                        onChange={e => {
+                          const next = [...expiryUpdateItems];
+                          next[idx] = { ...entry, newExpiryDate: e.target.value };
+                          setExpiryUpdateItems(next);
+                        }}
+                        style={{ ...inp, flex: 1, marginTop: 0 }}
+                      />
+                      <button
+                        onClick={() => {
+                          const next = [...expiryUpdateItems];
+                          next[idx] = { ...entry, skipped: true, newExpiryDate: "" };
+                          setExpiryUpdateItems(next);
+                        }}
+                        style={{ background: entry.skipped ? "#eee" : COLORS.bg, border: `1.5px solid ${COLORS.border}`, borderRadius: 10, padding: "10px 14px", fontSize: 12, cursor: "pointer", color: entry.skipped ? COLORS.textLight : COLORS.text, fontWeight: entry.skipped ? 700 : 400, flexShrink: 0 }}
+                      >
+                        {entry.skipped ? "スキップ済み" : "スキップ"}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={handleExpiryUpdateSave}
+                style={{ width: "100%", marginTop: 20, padding: 14, border: "none", borderRadius: 12, background: COLORS.accent, color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer" }}
+              >
+                保存して完了
+              </button>
+            </div>
+          </div>
+        )}
 
        {/* 編集モーダル */}
         {showEditShoppingModal && (
