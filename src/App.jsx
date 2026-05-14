@@ -726,7 +726,7 @@ export default function App() {
             onChange={e => setSortKey(e.target.value)}
             style={{ background: "#fff", border: "1.5px solid #e0dbd2", borderRadius: 8, padding: "4px 8px", fontSize: 11, color: "#5a9e3a", fontWeight: 700, cursor: "pointer", flexShrink: 0, outline: "none" }}
           >
-            <option value="statusAndExpiry">残り少ない・期限順</option>
+            <option value="statusAndExpiry">残数順</option>
             <option value="updatedAt">更新日順</option>
             <option value="expiryDate">期限順</option>
             <option value="name">名前順</option>
