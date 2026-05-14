@@ -43,7 +43,17 @@ export default function App() {
   const [shoppingForm, setShoppingForm] = useState({ name: "", amount: "", registerToPantry: false, category: "野菜" });
   const [editShoppingTarget, setEditShoppingTarget] = useState(null);
   const [editShoppingForm, setEditShoppingForm] = useState({ amount: "", memo: "" });
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportSettings, setExportSettings] = useState(() => {
+  try {
+    const saved = localStorage.getItem("exportSettings");
+    return saved ? JSON.parse(saved) : { people: "2人", unit: "あり", mood: "何でも", time: "こだわらない" };
+  } catch {
+    return { people: "2人", unit: "あり", mood: "何でも", time: "こだわらない" };
+  }
+});
   const [showEditShoppingModal, setShowEditShoppingModal] = useState(false);
+
 
   useEffect(() => {
     const handleResize = () => setIsPC(window.innerWidth >= 768);
