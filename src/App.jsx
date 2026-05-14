@@ -89,6 +89,9 @@ export default function App() {
     const unsubscribe = subscribeShoppingList(user.uid, setShoppingList);
     return unsubscribe;
   }, [user]);
+  useEffect(() => {
+    localStorage.setItem("exportSettings", JSON.stringify(exportSettings));
+  }, [exportSettings]);
 
   const login = async () => {
     const provider = new GoogleAuthProvider();
