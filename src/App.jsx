@@ -839,33 +839,66 @@ export default function App() {
           <div style={{ background: COLORS.white, borderRadius: "20px 20px 0 0", padding: "24px 20px 36px", width: "100%", maxWidth: 700, boxSizing: "border-box" }}>
             <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 20, color: COLORS.text }}>📤 レシピ相談</div>
 
-            <label style={lbl}>人数</label>
-            <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-              {["1人", "2人", "3人", "4人以上"].map(v => (
-                <button key={v} onClick={() => setExportSettings({ ...exportSettings, people: v })} style={{ flex: 1, padding: "8px 0", border: `1.5px solid ${exportSettings.people === v ? COLORS.accent : COLORS.border}`, borderRadius: 10, background: exportSettings.people === v ? COLORS.accent : COLORS.white, color: exportSettings.people === v ? "#fff" : COLORS.text, fontSize: 13, fontWeight: exportSettings.people === v ? 700 : 400, cursor: "pointer" }}>{v}</button>
-              ))}
-            </div>
+            {(() => {
+              const toggleMulti = (key, value, exclusiveValue) => {
+                const current = exportSettings[key];
+                if (value === exclusiveValue) {
+                  setExportSettings({ ...exportSettings, [key]: [exclusiveValue] });
+                } else {
+                  const without = current.filter(v => v !== exclusiveValue && v !== value);
+                  const next = [...without, value];
+                  setExportSettings({ ...exportSettings, [key]: next.length === 0 ? [exclusiveValue] : next });
+                }
+              };
+              const multiBtn = (key, value, exclusiveValue) => {
+                const active = exportSettings[key].includes(value);
+                return (
+                  <button key={value} onClick={() => toggleMulti(key, value, exclusiveValue)} style={{ flex: 1, padding: "8px 4px", border: `1.5px solid ${active ? COLORS.accent : COLORS.border}`, borderRadius: 10, background: active ? COLORS.accent : COLORS.white, color: active ? "#fff" : COLORS.text, fontSize: 12, fontWeight: active ? 700 : 400, cursor: "pointer" }}>{value}</button>
+                );
+              };
+              return (
+                <>
+                  <label style={lbl}>人数</label>
+                  <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                    {["1人", "2人", "3人", "4人以上"].map(v => (
+                      <button key={v} onClick={() => setExportSettings({ ...exportSettings, people: v })} style={{ flex: 1, padding: "8px 0", border: `1.5px solid ${exportSettings.people === v ? COLORS.accent : COLORS.border}`, borderRadius: 10, background: exportSettings.people === v ? COLORS.accent : COLORS.white, color: exportSettings.people === v ? "#fff" : COLORS.text, fontSize: 13, fontWeight: exportSettings.people === v ? 700 : 400, cursor: "pointer" }}>{v}</button>
+                    ))}
+                  </div>
 
-            <label style={lbl}>大さじ小さじ表記</label>
-            <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-              {["あり", "なし"].map(v => (
-                <button key={v} onClick={() => setExportSettings({ ...exportSettings, unit: v })} style={{ flex: 1, padding: "8px 0", border: `1.5px solid ${exportSettings.unit === v ? COLORS.accent : COLORS.border}`, borderRadius: 10, background: exportSettings.unit === v ? COLORS.accent : COLORS.white, color: exportSettings.unit === v ? "#fff" : COLORS.text, fontSize: 13, fontWeight: exportSettings.unit === v ? 700 : 400, cursor: "pointer" }}>{v}</button>
-              ))}
-            </div>
+                  <label style={lbl}>大さじ小さじ表記</label>
+                  <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                    {["あり", "なし"].map(v => (
+                      <button key={v} onClick={() => setExportSettings({ ...exportSettings, unit: v })} style={{ flex: 1, padding: "8px 0", border: `1.5px solid ${exportSettings.unit === v ? COLORS.accent : COLORS.border}`, borderRadius: 10, background: exportSettings.unit === v ? COLORS.accent : COLORS.white, color: exportSettings.unit === v ? "#fff" : COLORS.text, fontSize: 13, fontWeight: exportSettings.unit === v ? 700 : 400, cursor: "pointer" }}>{v}</button>
+                    ))}
+                  </div>
 
-            <label style={lbl}>味付けの気分</label>
-            <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-              {["和食", "洋食", "中華", "何でも"].map(v => (
-                <button key={v} onClick={() => setExportSettings({ ...exportSettings, mood: v })} style={{ flex: 1, padding: "8px 0", border: `1.5px solid ${exportSettings.mood === v ? COLORS.accent : COLORS.border}`, borderRadius: 10, background: exportSettings.mood === v ? COLORS.accent : COLORS.white, color: exportSettings.mood === v ? "#fff" : COLORS.text, fontSize: 13, fontWeight: exportSettings.mood === v ? 700 : 400, cursor: "pointer" }}>{v}</button>
-              ))}
-            </div>
+                  <label style={lbl}>味付けの気分（複数選択可）</label>
+                  <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                    {["和食", "洋食", "中華", "何でも"].map(v => multiBtn("mood", v, "何でも"))}
+                  </div>
 
-            <label style={lbl}>調理時間</label>
-            <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-              {["15分以内", "30分以内", "こだわらない"].map(v => (
-                <button key={v} onClick={() => setExportSettings({ ...exportSettings, time: v })} style={{ flex: 1, padding: "8px 0", border: `1.5px solid ${exportSettings.time === v ? COLORS.accent : COLORS.border}`, borderRadius: 10, background: exportSettings.time === v ? COLORS.accent : COLORS.white, color: exportSettings.time === v ? "#fff" : COLORS.text, fontSize: 13, fontWeight: exportSettings.time === v ? 700 : 400, cursor: "pointer" }}>{v}</button>
-              ))}
-            </div>
+                  <label style={lbl}>作りたいもの（複数選択可）</label>
+                  <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
+                    {["ご飯もの", "ご飯のおかず", "丼", "麺類", "汁物", "付け合わせ", "何でも"].map(v => multiBtn("dish", v, "何でも"))}
+                  </div>
+
+                  <label style={lbl}>調理方法（複数選択可）</label>
+                  <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
+                    {["フライパン1つ", "電子レンジ", "オーブン", "煮込み", "炒め物", "こだわらない"].map(v => multiBtn("method", v, "こだわらない"))}
+                  </div>
+
+                  <label style={lbl}>調理時間</label>
+                  <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                    {["15分以内", "30分以内", "こだわらない"].map(v => (
+                      <button key={v} onClick={() => setExportSettings({ ...exportSettings, time: v })} style={{ flex: 1, padding: "8px 0", border: `1.5px solid ${exportSettings.time === v ? COLORS.accent : COLORS.border}`, borderRadius: 10, background: exportSettings.time === v ? COLORS.accent : COLORS.white, color: exportSettings.time === v ? "#fff" : COLORS.text, fontSize: 13, fontWeight: exportSettings.time === v ? 700 : 400, cursor: "pointer" }}>{v}</button>
+                    ))}
+                  </div>
+
+                  <label style={lbl}>優先食材・備考（任意）</label>
+                  <input value={exportSettings.note} onChange={e => setExportSettings({ ...exportSettings, note: e.target.value })} placeholder="例：豚肉と卵を優先的に使いたい" style={inp} />
+                </>
+              );
+            })()}
 
             <div style={{ marginTop: 20, background: COLORS.bg, borderRadius: 10, padding: "12px 14px" }}>
               <div style={{ fontSize: 11, color: COLORS.textLight, marginBottom: 6, fontWeight: 600 }}>プレビュー</div>
