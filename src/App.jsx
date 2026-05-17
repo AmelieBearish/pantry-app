@@ -378,7 +378,6 @@ export default function App() {
     }).filter(Boolean);
     return header + "\n" + lines.join("\n");
   };
-  };
   const handleAddShoppingManual = async () => {
     if (!shoppingForm.name.trim()) return;
     await addShoppingItem(user.uid, {
