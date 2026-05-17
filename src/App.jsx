@@ -47,9 +47,21 @@ export default function App() {
   const [exportSettings, setExportSettings] = useState(() => {
   try {
     const saved = localStorage.getItem("exportSettings");
-    return saved ? JSON.parse(saved) : { people: "2人", unit: "あり", mood: "何でも", time: "こだわらない" };
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return {
+        people: parsed.people ?? "2人",
+        unit: parsed.unit ?? "あり",
+        mood: Array.isArray(parsed.mood) ? parsed.mood : (parsed.mood ? [parsed.mood] : ["何でも"]),
+        dish: Array.isArray(parsed.dish) ? parsed.dish : ["何でも"],
+        method: Array.isArray(parsed.method) ? parsed.method : ["こだわらない"],
+        time: parsed.time ?? "こだわらない",
+        note: parsed.note ?? "",
+      };
+    }
+    return { people: "2人", unit: "あり", mood: ["何でも"], dish: ["何でも"], method: ["こだわらない"], time: "こだわらない", note: "" };
   } catch {
-    return { people: "2人", unit: "あり", mood: "何でも", time: "こだわらない" };
+    return { people: "2人", unit: "あり", mood: ["何でも"], dish: ["何でも"], method: ["こだわらない"], time: "こだわらない", note: "" };
   }
 });
   const [showEditShoppingModal, setShowEditShoppingModal] = useState(false);
