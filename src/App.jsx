@@ -356,9 +356,19 @@ export default function App() {
   };
     const buildExportText = () => {
     const unitText = exportSettings.unit === "あり" ? "大さじ小さじ表記あり" : "大さじ小さじ表記なし";
-    const moodText = exportSettings.mood === "何でも" ? "今日は何でも良い気分です" : `今日は${exportSettings.mood}気分です`;
+    const moodText = exportSettings.mood.includes("何でも") ? "今日は何でも良い気分です" : `今日は${exportSettings.mood.join("か")}気分です`;
+    const dishText = exportSettings.dish.includes("何でも") ? "作りたいものはこだわりません。" : `作りたいものは${exportSettings.dish.join("か")}が希望です。`;
+    const methodText = exportSettings.method.includes("こだわらない") ? "調理方法はこだわりません。" : `${exportSettings.method.join("か")}で作れるものが希望です。`;
     const timeText = exportSettings.time === "こだわらない" ? "" : `調理時間は${exportSettings.time}でお願いします。`;
-    const header = `${exportSettings.people}分、${unitText}、${moodText}。\n以下の食材を使ったレシピを提案してください。${timeText ? "\n" + timeText : ""}`;
+    const noteText = exportSettings.note.trim() ? `${exportSettings.note.trim()}` : "";
+    const header = [
+      `${exportSettings.people}分、${unitText}、${moodText}`,
+      dishText,
+      methodText,
+      timeText,
+      noteText,
+      `以下の食材を使ったレシピを提案してください。`,
+    ].filter(Boolean).join("\n");
     const activeItems = items.filter(i => i.status !== "在庫なし");
     const lines = CATEGORIES.map(cat => {
       const catItems = activeItems.filter(i => i.category === cat);
@@ -367,6 +377,7 @@ export default function App() {
       return `【${cat}】\n・${names}`;
     }).filter(Boolean);
     return header + "\n" + lines.join("\n");
+  };
   };
   const handleAddShoppingManual = async () => {
     if (!shoppingForm.name.trim()) return;
