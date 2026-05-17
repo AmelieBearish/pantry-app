@@ -835,7 +835,7 @@ export default function App() {
       </div>
 {showExportModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 100, display: "flex", alignItems: "flex-end", justifyContent: "center" }} onClick={e => e.target === e.currentTarget && setShowExportModal(false)}>
-          <div style={{ background: COLORS.white, borderRadius: "20px 20px 0 0", padding: "24px 20px 36px", width: "100%", maxWidth: 700, boxSizing: "border-box" }}>
+          <div style={{ background: COLORS.white, borderRadius: "20px 20px 0 0", padding: "24px 20px 36px", width: "100%", maxWidth: 700, boxSizing: "border-box", maxHeight: "90vh", overflowY: "auto" }}>
             <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 20, color: COLORS.text }}>📤 レシピ相談</div>
 
             {(() => {
